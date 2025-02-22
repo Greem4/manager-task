@@ -1,7 +1,6 @@
 package ru.greemlab.managertask.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -36,10 +35,5 @@ public class UserService {
 
     public UserDetailsService userDetailsService() {
         return this::getByUsername;
-    }
-
-    public User getCurrentUser() {
-        var username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return getByUsername(username);
     }
 }
