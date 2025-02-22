@@ -2,12 +2,14 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.3'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
 }
 
 ext {
     versions = [
             jjwt     : '0.12.6',
             springdoc: '2.7.0',
+            jacoco   : '0.8.12',
     ]
 
 }
@@ -45,9 +47,27 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
+
+    testImplementation "org.jacoco:org.jacoco.agent:${versions.jacoco}"
 }
 
-tasks.named('test') {
+test {
     useJUnitPlatform()
+
+    jvmArgs += ['-XX:+EnableDynamicAgentLoading',
+                '-Djdk.instrument.traceUsage=false',
+                '-Xshare:off',
+                "-javaagent:${projectDir}/libs/byte-buddy-agent.jar"]
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
 }

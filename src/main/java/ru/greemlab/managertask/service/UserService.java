@@ -13,27 +13,32 @@ public class UserService {
 
     private final UserRepository repository;
 
-    public void save(User user) {
+    public User save(User user) {
         repository.save(user);
+        return user;
     }
 
-    public void create(User user) {
+    public User create(User user) {
         if (repository.existsByUsername(user.getUsername())) {
             throw new RuntimeException("Пользователь с таким именем уже существует");
         }
         if (repository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("Пользователь с таким email уже существует");
         }
-        save(user);
+        return save(user);
+    }
+
+    public User getByEmail(String email) {
+        return repository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователь c такой почтой не найден"));
     }
 
     public User getByUsername(String username) {
         return repository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
-
     }
 
     public UserDetailsService userDetailsService() {
-        return this::getByUsername;
+        return this::getByEmail;
     }
 }

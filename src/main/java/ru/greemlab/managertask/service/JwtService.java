@@ -22,7 +22,7 @@ public class JwtService {
     @Value("${app.jwt.token}")
     private String jwtSigningKey;
 
-    public String extractUserName(String token) {
+    public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -37,8 +37,12 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String userName = extractUserName(token);
-        return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        try {
+            final String email = extractEmail(token);
+            return (email.equals(((User)userDetails).getEmail()) && !isTokenExpired(token));
+        } catch (Exception e) {
+            throw new IllegalStateException("Invalid token", e);
+        }
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
@@ -49,7 +53,7 @@ public class JwtService {
     private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder()
                 .claims(extraClaims)
-                .subject(userDetails.getUsername())
+                .subject(((User) userDetails).getEmail() )
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + 100000 * 60 * 24))
                 .signWith(getSigningKey())

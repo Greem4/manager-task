@@ -1,0 +1,11 @@
+app:
+  jwt:
+    token: 53A73E5F1C4E0A2FSDFGKLDJFGKJLKFJGKLJFGLKDJLKGJFLKJGFLKJFDKLJGFKK
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yml

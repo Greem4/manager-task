@@ -37,15 +37,15 @@ public class AuthenticationService {
 
     public JwtAuthenticationResponse signIn(SignInRequest request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                request.username(),
+                request.email(),
                 request.password()
         ));
 
-        var user = userService
+        var email = userService
                 .userDetailsService()
-                .loadUserByUsername(request.username());
+                .loadUserByUsername(request.email());
 
-        var jwt = jwtService.generateToken(user);
+        var jwt = jwtService.generateToken(email);
         return new JwtAuthenticationResponse(jwt);
     }
 }

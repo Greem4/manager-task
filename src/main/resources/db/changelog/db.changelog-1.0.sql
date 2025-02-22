@@ -14,6 +14,9 @@ CREATE TABLE users
 INSERT INTO users (email, username, password, role)
 VALUES ('admin@admin.ru', 'admin',
         '$2a$10$QwJZKdG5jkPyQouykNSaRuza5RCmGjNwLGWVjfb7/Ob5Atn17uZLy',
-        'ROLE_ADMIN');
+        'ROLE_ADMIN'),
+       ('user@user.com', 'user',
+        '$2a$10$c8ispWShELshlVSRVkne4eHQaFFGEoB6YBUj58/zhq9GOufwc4E9C',
+        'ROLE_USER');
 
 
