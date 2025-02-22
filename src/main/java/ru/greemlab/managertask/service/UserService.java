@@ -6,7 +6,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import ru.greemlab.managertask.repository.UserRepository;
-import ru.greemlab.managertask.domain.model.Role;
 import ru.greemlab.managertask.domain.model.User;
 
 @Service
@@ -15,18 +14,18 @@ public class UserService {
 
     private final UserRepository repository;
 
-    public User save(User user) {
-        return repository.save(user);
+    public void save(User user) {
+        repository.save(user);
     }
 
-    public User create(User user) {
+    public void create(User user) {
         if (repository.existsByUsername(user.getUsername())) {
             throw new RuntimeException("Пользователь с таким именем уже существует");
         }
         if (repository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("Пользователь с таким email уже существует");
         }
-        return save(user);
+        save(user);
     }
 
     public User getByUsername(String username) {
@@ -42,12 +41,5 @@ public class UserService {
     public User getCurrentUser() {
         var username = SecurityContextHolder.getContext().getAuthentication().getName();
         return getByUsername(username);
-    }
-
-    @Deprecated
-    public void getAdmin() {
-        var user = getCurrentUser();
-        user.setRole(Role.ROLE_ADMIN);
-        save(user);
     }
 }
