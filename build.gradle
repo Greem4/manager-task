@@ -4,6 +4,14 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
+ext {
+    versions = [
+            jjwt     : '0.12.6',
+            springdoc: '2.7.0',
+    ]
+
+}
+
 group = 'ru.greemlab'
 version = '0.0.1-SNAPSHOT'
 
@@ -18,9 +26,26 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.liquibase:liquibase-core'
+
+    implementation "io.jsonwebtoken:jjwt-api:${versions.jjwt}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${versions.jjwt}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${versions.jjwt}"
+
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${versions.springdoc}"
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    runtimeOnly 'org.postgresql:postgresql'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.testcontainers:postgresql'
 }
 
 tasks.named('test') {
