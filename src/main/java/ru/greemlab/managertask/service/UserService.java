@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import ru.greemlab.managertask.domain.model.Role;
 import ru.greemlab.managertask.repository.UserRepository;
 import ru.greemlab.managertask.domain.model.User;
 
@@ -40,5 +41,11 @@ public class UserService {
 
     public UserDetailsService userDetailsService() {
         return this::getByEmail;
+    }
+
+    public User updateUserRole(String username, Role role) {
+        var user = getByUsername(username);
+        user.setRole(role);
+        return save(user);
     }
 }
