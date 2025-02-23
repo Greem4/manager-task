@@ -8,6 +8,7 @@ import ru.greemlab.managertask.domain.model.Role;
 import ru.greemlab.managertask.repository.UserRepository;
 import ru.greemlab.managertask.domain.model.User;
 
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -15,8 +16,12 @@ public class UserService {
     private final UserRepository repository;
 
     public User save(User user) {
-        repository.save(user);
-        return user;
+        return repository.save(user);
+    }
+
+    public User getById(Long userId) {
+        return repository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователя не существует"));
     }
 
     public User create(User user) {

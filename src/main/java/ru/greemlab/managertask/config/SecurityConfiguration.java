@@ -51,7 +51,6 @@ public class SecurityConfiguration {
                                 "/v3/api-docs/**")
                         .permitAll()
                         .requestMatchers(
-                                "/api/v1/endpoint",
                                 "/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
