@@ -1,12 +1,13 @@
 package ru.greemlab.managertask.junit.service;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -25,16 +26,19 @@ import ru.greemlab.managertask.mapper.CommentMapper;
 import ru.greemlab.managertask.mapper.TaskMapper;
 import ru.greemlab.managertask.repository.TaskCommentRepository;
 import ru.greemlab.managertask.repository.TaskRepository;
+import ru.greemlab.managertask.service.SecurityService;
 import ru.greemlab.managertask.service.TaskService;
 import ru.greemlab.managertask.service.UserService;
-import ru.greemlab.managertask.util.security.SecurityUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class TaskServiceTest {
 
     @Mock
@@ -53,7 +57,7 @@ public class TaskServiceTest {
     private TaskCommentRepository commentRepository;
 
     @Mock
-    private SecurityUtils securityUtils;
+    private SecurityService securityService;
 
     @InjectMocks
     private TaskService taskService;
@@ -86,45 +90,182 @@ public class TaskServiceTest {
 
     @Test
     void testCreateTask() {
-        // Настроим поведение для SecurityUtils
-        when(SecurityUtils.getCurrentUserName()).thenReturn("test@test.com");
-
-        // Настроим поведение для userService
-        when(userService.getByEmail("test@test.com")).thenReturn(user);
-
-        // Если пользователь с ролью ADMIN, то assignee может быть другим пользователем
-        when(userService.getById(1L)).thenReturn(user);
-
-        // Настроим маппер
+        when(securityService.getCurrentUserName()).thenReturn("testuser@test.com");
+        when(userService.getByEmail("testuser@test.com")).thenReturn(user);
         when(taskMapper.toEntity(taskCreateRequest, user, user)).thenReturn(task);
-
-        // Настроим репозиторий
         when(taskRepository.save(task)).thenReturn(task);
 
-        // Настроим маппер для ответа
-        var taskResponse = getTaskResponse();
+        var taskResponse = new TaskResponse(
+                task.getId(),
+                "Task Title",
+                "Task Description",
+                TaskStatus.PENDING.name(),
+                TaskPriority.MEDIUM.name(),
+                task.getAuthor().getId(),
+                task.getAssignee() != null ? task.getAssignee().getId() : null
+        );
+
         when(taskMapper.toResponse(task)).thenReturn(taskResponse);
 
-        // Вызовем метод для создания задачи
         var taskResponseResult = taskService.createTask(taskCreateRequest);
 
-        // Проверим, что ответ не null и проверим название задачи
         assertNotNull(taskResponseResult);
         assertEquals("Task Title", taskResponseResult.title());
-
-        // Убедимся, что репозиторий сохранил задачу
         verify(taskRepository, times(1)).save(task);
     }
 
+    @Test
+    void testUpdateTask() {
+        when(securityService.getCurrentUserName()).thenReturn("testuser@test.com");
+        when(taskRepository.findById(1L)).thenReturn(java.util.Optional.of(task));
+        when(userService.getByEmail("testuser@test.com")).thenReturn(user);
+        when(userService.getById(user.getId())).thenReturn(user);
+        when(taskMapper.toEntityForUpdate(taskUpdateRequest, task, user)).thenReturn(task);
+        when(taskRepository.save(task)).thenReturn(task);
 
-    private @NotNull TaskResponse getTaskResponse() {
-        return new TaskResponse(
+        var taskResponse = new TaskResponse(
                 task.getId(),
-                task.getTitle(),
-                task.getDescription(),
+                "Updated Title",
+                "Updated Description",
                 task.getStatus().name(),
                 task.getPriority().name(),
                 task.getAuthor().getId(),
-                task.getAssignee() != null ? task.getAssignee().getId() : null);
+                task.getAssignee() != null ? task.getAssignee().getId() : null
+        );
+
+        when(taskMapper.toResponse(task)).thenReturn(taskResponse);
+
+        TaskResponse updatedTask = taskService.updateTask(1L, taskUpdateRequest);
+
+        assertNotNull(updatedTask, "Updated task response should not be null");
+        assertEquals("Updated Title", updatedTask.title());
+        assertEquals("Updated Description", updatedTask.description());
+        verify(taskRepository, times(1)).save(task);
+    }
+
+    @Test
+    void testDeleteTask() {
+        when(taskRepository.existsById(1L)).thenReturn(true);
+        doNothing().when(taskRepository).deleteById(1L);
+
+        taskService.delete(1L);
+
+        verify(taskRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void testGetTasksByAuthor() {
+        Pageable pageable = mock(Pageable.class);
+        Page<Task> taskPage = new PageImpl<>(List.of(task));
+
+        when(userService.getById(user.getId())).thenReturn(user);
+        when(taskRepository.findByAuthor(user, pageable)).thenReturn(taskPage);
+
+        var taskResponse = new TaskResponse(
+                task.getId(),
+                "Task Title",
+                "Task Description",
+                task.getStatus().name(),
+                task.getPriority().name(),
+                task.getAuthor().getId(),
+                task.getAssignee() != null ? task.getAssignee().getId() : null
+        );
+        when(taskMapper.toResponse(task)).thenReturn(taskResponse);
+
+        Page<TaskResponse> tasks = taskService.getTasksByAuthor(user.getId(), pageable);
+
+        assertNotNull(tasks, "Tasks page should not be null");
+        assertEquals(1, tasks.getTotalElements(), "Page should have 1 task");
+        verify(taskRepository, times(1)).findByAuthor(user, pageable);
+        verify(userService, times(1)).getById(user.getId());
+    }
+
+    @Test
+    void testAddComment() {
+        when(securityService.getCurrentUserName()).thenReturn("testuser@test.com");
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+        when(userService.getByEmail("testuser@test.com")).thenReturn(user);
+
+        TaskComment comment = new TaskComment();
+        comment.setId(1L); // Устанавливаем ID
+        comment.setTask(task);
+        comment.setUser(user);
+        comment.setComment(commentRequest.comment());
+        comment.setCreatedAt(LocalDateTime.now());
+
+        when(commentRepository.save(any(TaskComment.class))).thenAnswer(invocation -> {
+            TaskComment savedComment = invocation.getArgument(0);
+            savedComment.setId(1L);
+            savedComment.setCreatedAt(LocalDateTime.now());
+            return savedComment;
+        });
+
+        CommentResponse commentResponse = new CommentResponse(
+                comment.getId(),
+                comment.getComment(),
+                comment.getTask().getId(),
+                comment.getUser().getId(),
+                comment.getUser().getEmail(),
+                comment.getCreatedAt()
+        );
+
+        when(commentMapper.toCommentResponse(any(TaskComment.class))).thenReturn(commentResponse);
+
+        CommentResponse commentResponseResult = taskService.addComment(1L, commentRequest);
+
+        assertNotNull(commentResponseResult, "Comment response should not be null");
+        verify(commentRepository, times(1)).save(any(TaskComment.class));
+        verify(commentMapper, times(1)).toCommentResponse(any(TaskComment.class));
+    }
+
+    @Test
+    void testUpdateStatus() {
+        when(securityService.getCurrentUserName()).thenReturn("testuser@test.com");
+        when(taskRepository.findById(1L)).thenReturn(java.util.Optional.of(task));
+        task.setStatus(TaskStatus.IN_PROGRESS);
+        when(taskRepository.save(task)).thenReturn(task);
+
+        var taskResponse = new TaskResponse(
+                task.getId(),
+                "Task Title",
+                "Task Description",
+                TaskStatus.IN_PROGRESS.name(),
+                TaskPriority.MEDIUM.name(),
+                task.getAuthor().getId(),
+                task.getAssignee() != null ? task.getAssignee().getId() : null
+        );
+        when(taskMapper.toResponse(task)).thenReturn(taskResponse);
+
+        TaskResponse updatedTask = taskService.updateStatus(1L, TaskStatus.IN_PROGRESS);
+
+        assertNotNull(updatedTask);
+        assertEquals(TaskStatus.IN_PROGRESS.name(), updatedTask.status());
+        verify(taskRepository, times(1)).save(task);
+    }
+
+    @Test
+    void testUpdatePriority() {
+        when(securityService.getCurrentUserName()).thenReturn("testuser@test.com");
+        when(taskRepository.findById(1L)).thenReturn(java.util.Optional.of(task));
+        task.setPriority(TaskPriority.HIGH);
+        when(taskRepository.save(task)).thenReturn(task);
+
+        var taskResponse = new TaskResponse(
+                task.getId(),
+                "Task Title",
+                "Task Description",
+                TaskStatus.PENDING.name(),
+                TaskPriority.HIGH.name(),
+                task.getAuthor().getId(),
+                task.getAssignee() != null ? task.getAssignee().getId() : null
+        );
+        when(taskMapper.toResponse(task)).thenReturn(taskResponse);
+
+        TaskResponse updatedTask = taskService.updatePriority(1L, TaskPriority.HIGH);
+
+        assertNotNull(updatedTask);
+        assertEquals(TaskPriority.HIGH.name(), updatedTask.priority());
+        verify(taskRepository, times(1)).save(task);
     }
 }
+

@@ -1,13 +1,12 @@
 package ru.greemlab.managertask.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.greemlab.managertask.domain.dto.CommentRequest;
 import ru.greemlab.managertask.domain.dto.CommentResponse;
 import ru.greemlab.managertask.domain.dto.TaskCreateRequest;
@@ -23,7 +22,6 @@ import ru.greemlab.managertask.mapper.CommentMapper;
 import ru.greemlab.managertask.mapper.TaskMapper;
 import ru.greemlab.managertask.repository.TaskCommentRepository;
 import ru.greemlab.managertask.repository.TaskRepository;
-import ru.greemlab.managertask.util.security.SecurityUtils;
 
 import java.util.Objects;
 
@@ -42,6 +40,8 @@ public class TaskService {
     private final TaskMapper taskMapper;
     private final CommentMapper commentMapper;
     private final TaskCommentRepository commentRepository;
+    private final SecurityService securityService;
+
 
     /**
      * Получение задачи по ID.
@@ -52,7 +52,7 @@ public class TaskService {
      */
     public Task getTaskById(Long taskId) {
         return taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Задача не найдена: " + taskId));
+                .orElseThrow(() -> new EntityNotFoundException("Задача не найдена: " + taskId));
     }
 
     /**
@@ -63,7 +63,7 @@ public class TaskService {
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public TaskResponse createTask(TaskCreateRequest request) {
-        var currentUser = userService.getByEmail(SecurityUtils.getCurrentUserName());
+        var currentUser = userService.getByEmail(securityService.getCurrentUserName());
         User assignee;
         if (currentUser.getRole() == Role.ROLE_ADMIN && request.assigneeId() != null) {
             assignee = userService.getById(request.assigneeId());
@@ -93,7 +93,7 @@ public class TaskService {
             """)
     public TaskResponse updateTask(Long taskId, TaskUpdateRequest request) {
         var existinTask = getTaskById(taskId);
-        var currentUser = userService.getByEmail(SecurityUtils.getCurrentUserName());
+        var currentUser = userService.getByEmail(securityService.getCurrentUserName());
         User newAssignee = null;
 
         if (currentUser.getRole() == Role.ROLE_ADMIN && request.assigneeId() != null) {
@@ -262,7 +262,7 @@ public class TaskService {
             """)
     public CommentResponse addComment(Long taskId, CommentRequest request) {
         var task = getTaskById(taskId);
-        var currentUser = userService.getByEmail(SecurityUtils.getCurrentUserName());
+        var currentUser = userService.getByEmail(securityService.getCurrentUserName());
 
         var comment = TaskComment.builder()
                 .task(task)
