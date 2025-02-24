@@ -6,14 +6,29 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
-import ru.greemlab.managertask.domain.dto.*;
-import ru.greemlab.managertask.domain.model.*;
+import ru.greemlab.managertask.domain.dto.CommentRequest;
+import ru.greemlab.managertask.domain.dto.CommentResponse;
+import ru.greemlab.managertask.domain.dto.TaskCreateRequest;
+import ru.greemlab.managertask.domain.dto.TaskResponse;
+import ru.greemlab.managertask.domain.dto.TaskUpdateRequest;
+import ru.greemlab.managertask.domain.model.Role;
+import ru.greemlab.managertask.domain.model.Task;
+import ru.greemlab.managertask.domain.model.TaskComment;
+import ru.greemlab.managertask.domain.model.TaskPriority;
+import ru.greemlab.managertask.domain.model.TaskStatus;
+import ru.greemlab.managertask.domain.model.User;
 import ru.greemlab.managertask.mapper.CommentMapper;
 import ru.greemlab.managertask.mapper.TaskMapper;
 import ru.greemlab.managertask.repository.TaskCommentRepository;
 import ru.greemlab.managertask.repository.TaskRepository;
 import ru.greemlab.managertask.util.security.SecurityUtils;
 
+/**
+ * Сервис для работы с задачами.
+ * <p>
+ * Сервис предоставляет методы для создания, обновления, удаления задач, а также для работы с комментариями.
+ * Методы защищены с использованием аннотаций @PreAuthorize для обеспечения безопасности.
+ */
 @Service
 @RequiredArgsConstructor
 public class TaskService {
@@ -24,11 +39,24 @@ public class TaskService {
     private final CommentMapper commentMapper;
     private final TaskCommentRepository commentRepository;
 
+    /**
+     * Получение задачи по ID.
+     *
+     * @param taskId ID задачи.
+     * @return Задача.
+     * @throws RuntimeException если задача не найдена.
+     */
     public Task getTaskById(Long taskId) {
         return taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Задача не найдена: " + taskId));
     }
 
+    /**
+     * Создание новой задачи.
+     *
+     * @param request Данные для создания задачи.
+     * @return Ответ с информацией о созданной задаче.
+     */
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public TaskResponse createTask(TaskCreateRequest request) {
         var currentUser = userService.getByEmail(SecurityUtils.getCurrentUserName());
@@ -43,6 +71,14 @@ public class TaskService {
         return taskMapper.toResponse(saved);
     }
 
+    /**
+     * Обновление задачи.
+     *
+     * @param taskId  ID задачи.
+     * @param request Данные для обновления задачи.
+     * @return Ответ с обновленной задачей.
+     * @throws RuntimeException если текущий пользователь не имеет прав на обновление.
+     */
     @PreAuthorize("""
             hasAnyRole('ADMIN', 'USER')
             or (
@@ -71,6 +107,12 @@ public class TaskService {
         return taskMapper.toResponse(saved);
     }
 
+    /**
+     * Удаление задачи.
+     *
+     * @param taskId ID задачи.
+     * @throws RuntimeException если задача не существует.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     public void delete(Long taskId) {
         if (!taskRepository.existsById(taskId)) {
@@ -79,6 +121,13 @@ public class TaskService {
         taskRepository.deleteById(taskId);
     }
 
+    /**
+     * Получение задач, созданных автором.
+     *
+     * @param authorId ID автора задач.
+     * @param pageable Параметры пагинации.
+     * @return Страница с задачами.
+     */
     @PreAuthorize("""
             hasAnyRole('ADMIN')
             or (
@@ -94,6 +143,13 @@ public class TaskService {
         return new PageImpl<>(content, pageable, page.getTotalElements());
     }
 
+    /**
+     * Получение задач, назначенных на исполнителя.
+     *
+     * @param assigneeId ID исполнителя задач.
+     * @param pageable   Параметры пагинации.
+     * @return Страница с задачами.
+     */
     @PreAuthorize("""
             hasAnyRole('ADMIN')
             or (
@@ -109,6 +165,13 @@ public class TaskService {
         return new PageImpl<>(content, pageable, page.getTotalElements());
     }
 
+    /**
+     * Обновление статуса задачи.
+     *
+     * @param taskId ID задачи.
+     * @param status Новый статус задачи.
+     * @return Ответ с обновленной задачей.
+     */
     @PreAuthorize("""
             hasRole('ADMIN')
             or (
@@ -123,6 +186,13 @@ public class TaskService {
         return taskMapper.toResponse(saved);
     }
 
+    /**
+     * Обновление приоритета задачи.
+     *
+     * @param taskId   ID задачи.
+     * @param priority Новый приоритет задачи.
+     * @return Ответ с обновленной задачей.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     public TaskResponse updatePriority(Long taskId, TaskPriority priority) {
         var task = getTaskById(taskId);
@@ -131,6 +201,13 @@ public class TaskService {
         return taskMapper.toResponse(saved);
     }
 
+    /**
+     * Назначение задачи на исполнителя.
+     *
+     * @param taskId ID задачи.
+     * @param userId ID исполнителя.
+     * @return Ответ с обновленной задачей.
+     */
     @PreAuthorize("hasRole('ADMIN')")
     public TaskResponse assignTask(Long taskId, Long userId) {
         var task = getTaskById(taskId);
@@ -140,6 +217,13 @@ public class TaskService {
         return taskMapper.toResponse(saved);
     }
 
+    /**
+     * Получение комментариев по задаче.
+     *
+     * @param taskId   ID задачи.
+     * @param pageable Параметры пагинации.
+     * @return Страница с комментариями.
+     */
     @PreAuthorize("""
             hasRole('ADMIN')
             or (
@@ -158,6 +242,13 @@ public class TaskService {
         return new PageImpl<>(commentResponses, pageable, commentsPage.getTotalElements());
     }
 
+    /**
+     * Добавление комментария к задаче.
+     *
+     * @param taskId  ID задачи.
+     * @param request Данные для добавления комментария.
+     * @return Ответ с добавленным комментарием.
+     */
     @PreAuthorize("""
             hasRole('ADMIN')
             or (

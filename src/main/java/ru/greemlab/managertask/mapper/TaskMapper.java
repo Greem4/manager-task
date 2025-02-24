@@ -7,9 +7,21 @@ import ru.greemlab.managertask.domain.dto.TaskUpdateRequest;
 import ru.greemlab.managertask.domain.model.Task;
 import ru.greemlab.managertask.domain.model.User;
 
+/**
+ * Маппер для преобразования объектов TaskCreateRequest, TaskUpdateRequest, Task в TaskResponse и обратно.
+ * Позволяет преобразовывать данные из DTO в сущности и наоборот.
+ */
 @Component
 public class TaskMapper {
 
+    /**
+     * Преобразует объект TaskCreateRequest в сущность Task.
+     *
+     * @param dto       Объект TaskCreateRequest.
+     * @param author    Автор задачи.
+     * @param assignee  Исполнитель задачи.
+     * @return Преобразованная сущность Task.
+     */
     public Task toEntity(TaskCreateRequest dto, User author, User assignee) {
         return Task.builder()
                 .title(dto.title())
@@ -21,6 +33,14 @@ public class TaskMapper {
                 .build();
     }
 
+    /**
+     * Преобразует объект TaskUpdateRequest в существующую сущность Task.
+     *
+     * @param dto          Объект TaskUpdateRequest.
+     * @param existingTask Сущность Task, которую нужно обновить.
+     * @param assignee     Новый исполнитель задачи (может быть null).
+     * @return Обновленная сущность Task.
+     */
     public Task toEntityForUpdate(TaskUpdateRequest dto, Task existingTask, User assignee) {
         if (dto.title() != null) {
             existingTask.setTitle(dto.title());
@@ -40,6 +60,12 @@ public class TaskMapper {
         return existingTask;
     }
 
+    /**
+     * Преобразует сущность Task в объект TaskResponse.
+     *
+     * @param task Сущность Task.
+     * @return Преобразованный объект TaskResponse.
+     */
     public TaskResponse toResponse(Task task) {
         return TaskResponse.builder()
                 .id(task.getId())

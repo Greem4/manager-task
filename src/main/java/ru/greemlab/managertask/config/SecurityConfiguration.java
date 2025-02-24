@@ -22,6 +22,10 @@ import java.util.List;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
+/**
+ * Конфигурация безопасности для приложения.
+ * Включает настройки для CORS, фильтры для JWT и настройку аутентификации.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -31,10 +35,17 @@ public class SecurityConfiguration {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserService userService;
 
+    /**
+     * Настройка безопасности для HTTP.
+     * Определяет доступные URL, разрешения и настройку CORS.
+     *
+     * @param http Объект HttpSecurity для настройки.
+     * @return Конфигурация безопасности.
+     * @throws Exception Если произошла ошибка при настройке.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                // Своего рода отключение CORS (разрешение запросов со всех доменов)
+        http.csrf(AbstractHttpConfigurer::disable) // Отключаем CSRF
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new CorsConfiguration();
                     corsConfiguration.setAllowedOriginPatterns(List.of("*"));
@@ -44,29 +55,32 @@ public class SecurityConfiguration {
                     return corsConfiguration;
                 }))
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-resources/*",
-                                "/v3/api-docs/**")
-                        .permitAll()
-                        .requestMatchers(
-                                "/api/v1/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
-                .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                        .requestMatchers("/api/v1/auth/**").permitAll() // Доступ к аутентификации открыт для всех
+                        .requestMatchers("/swagger-ui/**", "/swagger-resources/*", "/v3/api-docs/**").permitAll() // Доступ к Swagger UI
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN") // Доступ к админским функциям только для администраторов
+                        .anyRequest().authenticated()) // Все остальные запросы требуют аутентификации
+                .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS)) // Отключаем сессии
+                .authenticationProvider(authenticationProvider()) // Добавляем провайдер аутентификации
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Добавляем фильтр перед фильтром аутентификации
         return http.build();
-
     }
 
-
-
+    /**
+     * Бин для создания PasswordEncoder, который будет использоваться для хеширования паролей.
+     *
+     * @return BCryptPasswordEncoder.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Настроить провайдер аутентификации с использованием DaoAuthenticationProvider.
+     * Устанавливает UserDetailsService для аутентификации.
+     *
+     * @return DaoAuthenticationProvider.
+     */
     @Bean
     public AuthenticationProvider authenticationProvider() {
         var authProvider = new DaoAuthenticationProvider();
@@ -75,6 +89,13 @@ public class SecurityConfiguration {
         return authProvider;
     }
 
+    /**
+     * Создание AuthenticationManager для аутентификации пользователей.
+     *
+     * @param config Конфигурация аутентификации.
+     * @return AuthenticationManager для аутентификации.
+     * @throws Exception Если произошла ошибка при создании менеджера аутентификации.
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
             throws Exception {

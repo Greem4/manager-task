@@ -32,16 +32,16 @@
         <appender-ref ref="FILE"/>
     </logger>
 
-    <logger name="org.springframework.security" level="debug" additivity="false"/>
-    <logger name="org.apache.coyote.http11" level="debug" />
-    <logger name="org.apache.tomcat.util.net" level="debug" />
-    <logger name="ru.greemlab.managertask" level="debug" />
+    <logger name="org.springframework.security" level="info" additivity="false"/>
+    <logger name="org.apache.coyote.http11" level="info" />
+    <logger name="org.apache.tomcat.util.net" level="info" />
+    <logger name="ru.greemlab.managertask" level="info" />
 
 
     <logger name="org.hibernate" level="WARN"/>
     <logger name="com.zaxxer.hikari" level="WARN"/>
 
-    <logger name="org.hibernate.SQL" level="debug" additivity="false">
+    <logger name="org.hibernate.SQL" level="info" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </logger>

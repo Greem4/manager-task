@@ -17,14 +17,29 @@ import ru.greemlab.managertask.service.UserService;
 
 import java.io.IOException;
 
+/**
+ * Фильтр аутентификации JWT.
+ * Проверяет наличие JWT в заголовке запроса и валидирует его.
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String HEADER_NAME = "Authorization";
+
     private final JwtService jwtService;
     private final UserService userService;
 
+    /**
+     * Метод, выполняющий фильтрацию запроса на наличие и валидность JWT.
+     *
+     * @param request Входящий HTTP запрос.
+     * @param response Ответ, который будет отправлен клиенту.
+     * @param filterChain Цепочка фильтров, по которой передается запрос дальше.
+     * @throws ServletException Если произошла ошибка при обработке запроса.
+     * @throws IOException Если произошла ошибка ввода-вывода.
+     */
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,

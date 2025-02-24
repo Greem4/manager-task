@@ -11,6 +11,10 @@ import ru.greemlab.managertask.domain.dto.SignUpRequest;
 import ru.greemlab.managertask.domain.model.Role;
 import ru.greemlab.managertask.domain.model.User;
 
+/**
+ * Сервис для аутентификации пользователей.
+ * Обрабатывает регистрацию и вход пользователей, генерирует JWT токены.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -20,6 +24,12 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
+    /**
+     * Регистрация нового пользователя.
+     *
+     * @param request Данные для регистрации.
+     * @return Ответ с JWT токеном для аутентификации.
+     */
     public JwtAuthenticationResponse signUp(SignUpRequest request) {
 
         var user = User.builder()
@@ -35,6 +45,12 @@ public class AuthenticationService {
         return new JwtAuthenticationResponse(jwt);
     }
 
+    /**
+     * Аутентификация пользователя.
+     *
+     * @param request Данные для входа.
+     * @return Ответ с JWT токеном для аутентификации.
+     */
     public JwtAuthenticationResponse signIn(SignInRequest request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 request.email(),

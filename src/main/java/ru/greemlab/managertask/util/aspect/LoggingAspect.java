@@ -12,16 +12,39 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.Instant;
 
+/**
+ * Аспект для логирования вызовов методов.
+ * <p>
+ * Этот аспект перехватывает вызовы публичных методов в контроллерах и сервисах и логирует:
+ * - Начало выполнения метода.
+ * - Время выполнения метода.
+ * - Результат выполнения метода (или исключение, если оно произошло).
+ * <p>
+ * Аспект использует AOP (Aspect-Oriented Programming) для логирования
+ * и исключает логирование информации об объекте {@link Authentication}.
+ */
 @Slf4j
 @Aspect
 @Component
 public class LoggingAspect {
 
+    /**
+     * Определяет точку отсечения для всех публичных методов в пакетах контроллеров и сервисов.
+     */
     @Pointcut("execution(public * ru.greemlab.managertask.controller..*(..)) " +
               "|| execution(public * ru.greemlab.managertask.service..*(..))")
     public void applicationPackagePointcut() {
     }
 
+    /**
+     * Перехватывает выполнение методов, определенных в точке отсечения {@link LoggingAspect}.
+     * Логирует информацию о начале и завершении выполнения метода, включая время исполнения,
+     * а также параметры метода и его результат или исключение, если оно возникло.
+     *
+     * @param joinPoint точка соединения для перехвата метода.
+     * @return результат выполнения метода.
+     * @throws Throwable если метод выбрасывает исключение.
+     */
     @Around("applicationPackagePointcut()")
     public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
         var signature = (MethodSignature) joinPoint.getSignature();
@@ -32,7 +55,7 @@ public class LoggingAspect {
 
         StringBuilder argumentsInfo = new StringBuilder();
         for (int i = 0; i < args.length; i++) {
-            if (args[i] != null && !(args[i] instanceof Authentication)) { // Исключаем Authentication
+            if (args[i] != null && !(args[i] instanceof Authentication)) {
                 argumentsInfo.append(parameterNames[i])
                         .append("=")
                         .append(args[i])
@@ -48,6 +71,7 @@ public class LoggingAspect {
 
         try {
             Object result = joinPoint.proceed();
+
             Instant end = Instant.now();
             long elapsedSeconds = Duration.between(start, end).toSeconds();
             log.debug("[THREAD: {}] Completed method call: {}.{} in {} seconds. Result: {}",
@@ -57,7 +81,6 @@ public class LoggingAspect {
         } catch (Throwable ex) {
             Instant end = Instant.now();
             long elapsedSeconds = Duration.between(start, end).toSeconds();
-
             log.error("[THREAD: {}] Exception in method: {}.{} after {} seconds. Exception: {}",
                     threadName, className, methodName, elapsedSeconds, ex.toString());
 

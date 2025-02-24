@@ -1,13 +1,7 @@
 package ru.greemlab.managertask.domain.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,6 +14,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Модель пользователя.
+ * Содержит информацию о пользователе, такую как имя, пароль, email и роль.
+ * Реализует интерфейс UserDetails для использования с Spring Security.
+ */
 @Entity
 @Builder
 @Getter
@@ -28,22 +27,28 @@ import java.util.List;
 @AllArgsConstructor
 @Table(name = "users")
 public class User implements UserDetails {
+
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Идентификатор пользователя", example = "1")
     private Long id;
 
     @Column(name = "username", unique = true, nullable = false)
+    @Schema(description = "Имя пользователя", example = "user")
     private String username;
 
     @Column(name = "password", nullable = false)
+    @Schema(description = "Пароль пользователя", example = "password123")
     private String password;
 
     @Column(name = "email", unique = true, nullable = false)
+    @Schema(description = "Адрес электронной почты", example = "user@example.com")
     private String email;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
+    @Schema(description = "Роль пользователя", allowableValues = {"ROLE_USER", "ROLE_ADMIN"}, example = "ROLE_USER")
     private Role role;
 
     @Override

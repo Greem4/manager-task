@@ -12,9 +12,19 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Конфигурация для Swagger UI и OpenAPI.
+ * Описывает информацию о сервисе и настройки безопасности для API.
+ */
 @Configuration
 public class SwaggerConfig {
 
+    /**
+     * Описание OpenAPI для Swagger UI.
+     * Указывает информацию о версии, описании и безопасности API.
+     *
+     * @return OpenAPI конфигурация.
+     */
     @Bean
     public OpenAPI customerOpenAPI() {
         return new OpenAPI()
@@ -27,12 +37,16 @@ public class SwaggerConfig {
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")
-
                         )
                 )
                 .addSecurityItem(new SecurityRequirement().addList("BearerAuth"));
     }
 
+    /**
+     * Конфигурация для сериализации LocalDateTime в JSON.
+     *
+     * @return Jackson2ObjectMapperBuilder для настройки сериализации.
+     */
     @Bean
     public Jackson2ObjectMapperBuilder jsonObjectMapper() {
         return Jackson2ObjectMapperBuilder.json()
