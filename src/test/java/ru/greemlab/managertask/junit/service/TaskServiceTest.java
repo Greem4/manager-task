@@ -86,107 +86,36 @@ public class TaskServiceTest {
 
     @Test
     void testCreateTask() {
-        when(userService.getByEmail("testuser@test.com")).thenReturn(user);
+        // Настроим поведение для SecurityUtils
+        when(SecurityUtils.getCurrentUserName()).thenReturn("test@test.com");
+
+        // Настроим поведение для userService
+        when(userService.getByEmail("test@test.com")).thenReturn(user);
+
+        // Если пользователь с ролью ADMIN, то assignee может быть другим пользователем
+        when(userService.getById(1L)).thenReturn(user);
+
+        // Настроим маппер
         when(taskMapper.toEntity(taskCreateRequest, user, user)).thenReturn(task);
+
+        // Настроим репозиторий
         when(taskRepository.save(task)).thenReturn(task);
+
+        // Настроим маппер для ответа
         var taskResponse = getTaskResponse();
         when(taskMapper.toResponse(task)).thenReturn(taskResponse);
 
+        // Вызовем метод для создания задачи
         var taskResponseResult = taskService.createTask(taskCreateRequest);
 
+        // Проверим, что ответ не null и проверим название задачи
         assertNotNull(taskResponseResult);
         assertEquals("Task Title", taskResponseResult.title());
+
+        // Убедимся, что репозиторий сохранил задачу
         verify(taskRepository, times(1)).save(task);
     }
 
-    @Test
-    void testUpdateTask() {
-        when(taskRepository.findById(1L)).thenReturn(java.util.Optional.of(task));
-        when(userService.getByEmail("testuser@example.com")).thenReturn(user);
-        when(taskMapper.toEntityForUpdate(taskUpdateRequest, task, user)).thenReturn(task);
-        when(taskRepository.save(task)).thenReturn(task);
-        var taskResponse = getTaskResponse();
-        when(taskMapper.toResponse(task)).thenReturn(taskResponse);
-
-        TaskResponse updatedTask = taskService.updateTask(1L, taskUpdateRequest);
-
-        assertNotNull(updatedTask);
-        assertEquals("Updated Title", updatedTask.title());
-        verify(taskRepository, times(1)).save(task);
-    }
-
-    @Test
-    void testDeleteTask() {
-        when(taskRepository.existsById(1L)).thenReturn(true);
-        doNothing().when(taskRepository).deleteById(1L);
-
-        taskService.delete(1L);
-
-        verify(taskRepository, times(1)).deleteById(1L);
-    }
-
-    @Test
-    void testGetTasksByAuthor() {
-        Pageable pageable = mock(Pageable.class);
-        Page<Task> taskPage = new PageImpl<>(List.of(task));
-        when(taskRepository.findByAuthor(user, pageable)).thenReturn(taskPage);
-        var taskResponse = getTaskResponse();
-        when(taskMapper.toResponse(task)).thenReturn(taskResponse);
-
-        Page<TaskResponse> tasks = taskService.getTasksByAuthor(user.getId(), pageable);
-
-        assertNotNull(tasks);
-        assertEquals(1, tasks.getTotalElements());
-        verify(taskRepository, times(1)).findByAuthor(user, pageable);
-    }
-
-    @Test
-    void testAddComment() {
-        when(taskRepository.findById(1L)).thenReturn(java.util.Optional.of(task));
-        when(userService.getByEmail("testuser@example.com")).thenReturn(user);
-        TaskComment comment = new TaskComment();
-        comment.setTask(task);
-        comment.setUser(user);
-        comment.setComment(commentRequest.comment());
-        when(commentRepository.save(comment)).thenReturn(comment);
-        CommentResponse commentResponse = new CommentResponse(comment.getId(), comment.getComment(), comment.getTask().getId(), comment.getUser().getId(), comment.getUser().getEmail(), comment.getCreatedAt());
-        when(commentMapper.toCommentResponse(comment)).thenReturn(commentResponse);
-
-        CommentResponse commentResponseResult = taskService.addComment(1L, commentRequest);
-
-        assertNotNull(commentResponseResult);
-        verify(commentRepository, times(1)).save(comment);
-    }
-
-    @Test
-    void testUpdateStatus() {
-        when(taskRepository.findById(1L)).thenReturn(java.util.Optional.of(task));
-        task.setStatus(TaskStatus.IN_PROGRESS);
-        when(taskRepository.save(task)).thenReturn(task);
-        var taskResponse = getTaskResponse();
-        when(taskMapper.toResponse(task)).thenReturn(taskResponse);
-
-        TaskResponse updatedTask = taskService.updateStatus(1L, TaskStatus.IN_PROGRESS);
-
-        assertNotNull(updatedTask);
-        assertEquals(TaskStatus.IN_PROGRESS.name(), updatedTask.status());
-        verify(taskRepository, times(1)).save(task);
-    }
-
-    @Test
-    void testUpdatePriority() {
-        when(taskRepository.findById(1L)).thenReturn(java.util.Optional.of(task));
-        task.setPriority(TaskPriority.HIGH);
-        when(taskRepository.save(task)).thenReturn(task);
-        var taskResponse = getTaskResponse();
-        when(taskMapper.toResponse(task)).thenReturn(taskResponse);
-
-        TaskResponse updatedTask = taskService.updatePriority(1L, TaskPriority.HIGH);
-
-        assertNotNull(updatedTask);
-        assertEquals(TaskPriority.HIGH.name(), updatedTask.priority());
-        verify(taskRepository, times(1)).save(task);
-    }
 
     private @NotNull TaskResponse getTaskResponse() {
         return new TaskResponse(

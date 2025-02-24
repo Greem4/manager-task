@@ -41,16 +41,4 @@ public class SwaggerConfig {
                 )
                 .addSecurityItem(new SecurityRequirement().addList("BearerAuth"));
     }
-
-    /**
-     * Конфигурация для сериализации LocalDateTime в JSON.
-     *
-     * @return Jackson2ObjectMapperBuilder для настройки сериализации.
-     */
-    @Bean
-    public Jackson2ObjectMapperBuilder jsonObjectMapper() {
-        return Jackson2ObjectMapperBuilder.json()
-                .simpleDateFormat("dd-MM-yyyy HH:mm")
-                .serializers(new LocalDateTimeSerializer(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")));
-    }
 }

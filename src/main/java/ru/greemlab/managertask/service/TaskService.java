@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.greemlab.managertask.domain.dto.CommentRequest;
 import ru.greemlab.managertask.domain.dto.CommentResponse;
 import ru.greemlab.managertask.domain.dto.TaskCreateRequest;
@@ -22,6 +24,8 @@ import ru.greemlab.managertask.mapper.TaskMapper;
 import ru.greemlab.managertask.repository.TaskCommentRepository;
 import ru.greemlab.managertask.repository.TaskRepository;
 import ru.greemlab.managertask.util.security.SecurityUtils;
+
+import java.util.Objects;
 
 /**
  * Сервис для работы с задачами.
@@ -95,8 +99,8 @@ public class TaskService {
         if (currentUser.getRole() == Role.ROLE_ADMIN && request.assigneeId() != null) {
             newAssignee = userService.getById(request.assigneeId());
         } else if (currentUser.getRole() != Role.ROLE_ADMIN) {
-            if (existinTask.getAssignee().equals(currentUser)) {
-                newAssignee = currentUser;
+            if (existinTask.getAssignee().equals(currentUser) || Objects.equals(existinTask.getAssignee().getId(), request.assigneeId())) {
+                newAssignee = userService.getById(request.assigneeId());
             } else {
                 throw new RuntimeException("Не достаточно прав для изменения задачи");
             }

@@ -27,8 +27,20 @@ public class AuthControllerTest extends IntegrationTestBase {
     }
 
     @Test
-    void testLogin() {
+    void testLoginAdmin() {
         var request = new SignInRequest("admin@mail.ru", "admin");
+
+        var response = testRestTemplate
+                .postForEntity("/api/v1/auth/login", request, JwtAuthenticationResponse.class);
+
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().token()).isNotEmpty();
+    }
+
+    @Test
+    void testLoginUser() {
+        var request = new SignInRequest("user@mail.ru", "user");
 
         var response = testRestTemplate
                 .postForEntity("/api/v1/auth/login", request, JwtAuthenticationResponse.class);

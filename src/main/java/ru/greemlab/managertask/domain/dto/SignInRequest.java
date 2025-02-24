@@ -13,12 +13,12 @@ public record SignInRequest(
 
         @Email(message = "Введен не верно")
         @NotBlank(message = "Имя пользователя не может быть пустым")
-        @Schema(description = "Электронная почта пользователя", example = "user@example.com")
+        @Schema(description = "Электронная почта пользователя", example = "user@mail.ru")
         String email,
 
         @Size(min = 4, max = 255, message = "Длина пароля должна быть от 4 до 255 символов")
         @NotBlank(message = "Пароль не может быть пустым")
-        @Schema(description = "Пароль пользователя", example = "password1234")
+        @Schema(description = "Пароль пользователя", example = "user")
         String password
 ) {
 }

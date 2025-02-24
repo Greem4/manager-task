@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.greemlab.managertask.domain.dto.*;
 import ru.greemlab.managertask.domain.model.TaskPriority;
@@ -72,6 +73,7 @@ public class TaskController {
             @ApiResponse(responseCode = "204", description = "Задача успешно удалена"),
             @ApiResponse(responseCode = "404", description = "Задача с указанным ID не найдена")
     })
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTask(@PathVariable Long taskId) {
         taskService.delete(taskId);
     }
@@ -203,6 +205,7 @@ public class TaskController {
             @ApiResponse(responseCode = "201", description = "Комментарий успешно добавлен"),
             @ApiResponse(responseCode = "400", description = "Некорректные данные комментария")
     })
+    @ResponseStatus(HttpStatus.CREATED)
     public CommentResponse addComment(@PathVariable Long taskId,
                                       @RequestBody @Valid CommentRequest request) {
         return taskService.addComment(taskId, request);
