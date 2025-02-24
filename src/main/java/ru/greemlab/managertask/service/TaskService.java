@@ -1,8 +1,6 @@
 package ru.greemlab.managertask.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import ru.greemlab.managertask.domain.dto.TaskCreateRequest;
@@ -14,7 +12,6 @@ import ru.greemlab.managertask.repository.TaskCommentRepository;
 import ru.greemlab.managertask.repository.TaskRepository;
 import ru.greemlab.managertask.util.security.SecurityUtils;
 
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +19,6 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final UserService userService;
-    private final TaskCommentRepository commentRepository;
     private final TaskMapper taskMapper;
 
     public Task getTaskById(Long taskId) {
@@ -33,9 +29,11 @@ public class TaskService {
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public TaskResponse createTask(TaskCreateRequest request) {
         var currentUser = userService.getByEmail(SecurityUtils.getCurrentUserName());
-        User assignee = null;
+        User assignee;
         if (currentUser.getRole() == Role.ROLE_ADMIN && request.assigneeId() != null) {
             assignee = userService.getById(request.assigneeId());
+        } else {
+            assignee = currentUser;
         }
         var task = taskMapper.toEntity(request, currentUser, assignee);
         var saved = taskRepository.save(task);
@@ -57,6 +55,12 @@ public class TaskService {
 
         if (currentUser.getRole() == Role.ROLE_ADMIN && request.assigneeId() != null) {
             newAssignee = userService.getById(request.assigneeId());
+        } else if (currentUser.getRole() != Role.ROLE_ADMIN) {
+            if (existinTask.getAssignee().equals(currentUser)) {
+                newAssignee = currentUser;
+            } else {
+                throw new RuntimeException("Не достаточно прав для изменения задачи");
+            }
         }
 
         var update = taskMapper.toEntityForUpdate(request, existinTask, newAssignee);

@@ -20,7 +20,7 @@ public class TaskController {
         return taskService.createTask(request);
     }
 
-    @PostMapping("/{taskId}")
+    @PutMapping("/{taskId}")
     public TaskResponse updateTask(@PathVariable Long taskId,
                                    @RequestBody @Valid TaskUpdateRequest request) {
         return taskService.updateTask(taskId, request);
