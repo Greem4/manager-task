@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import ru.greemlab.managertask.domain.dto.TaskCreateRequest;
 import ru.greemlab.managertask.domain.dto.TaskResponse;
 import ru.greemlab.managertask.domain.dto.TaskUpdateRequest;
