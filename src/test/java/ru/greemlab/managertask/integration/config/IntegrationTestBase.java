@@ -57,11 +57,11 @@ public abstract class IntegrationTestBase {
     }
 
     protected @NotNull HttpHeaders getHeadersAdmin() {
-        return getHeaders("admin@admin.ru", "admin");
+        return getHeaders("admin@mail.ru", "admin");
     }
 
     protected @NotNull HttpHeaders getHeadersUser() {
-        return getHeaders("user@user.ru", "user");
+        return getHeaders("user@mail.ru", "user");
     }
 
     protected JwtAuthenticationResponse authenticate(String username, String password) {
@@ -72,7 +72,6 @@ public abstract class IntegrationTestBase {
                 new HttpEntity<>(loginRequest, getHttpHeaders()),
                 JwtAuthenticationResponse.class
         );
-
         return Objects.requireNonNull(response.getBody());
     }
 

@@ -12,11 +12,11 @@ CREATE TABLE users
 
 --changeset greemlab:2
 INSERT INTO users (email, username, password, role)
-VALUES ('admin@admin.ru', 'admin',
-        '$2a$10$QwJZKdG5jkPyQouykNSaRuza5RCmGjNwLGWVjfb7/Ob5Atn17uZLy',
+VALUES ('admin@mail.ru', 'admin',
+        '$2a$10$gBY2ViYvLULQSiIdn0E85.bbzDn2z0hAk0S4hicMFikzNWaOEV.86',
         'ROLE_ADMIN'),
-       ('user@user.com', 'user',
-        '$2a$10$c8ispWShELshlVSRVkne4eHQaFFGEoB6YBUj58/zhq9GOufwc4E9C',
+       ('user@mail.ru', 'user',
+        '$2a$10$OcKeJhVizXLJ2w1VDVf2YeXpyVTXN6aFAL04s3UxMHU3HpFMHisvq',
         'ROLE_USER');
 
 --changeset greemlab:3

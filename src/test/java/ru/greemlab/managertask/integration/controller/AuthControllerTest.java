@@ -28,7 +28,7 @@ public class AuthControllerTest extends IntegrationTestBase {
 
     @Test
     void testLogin() {
-        var request = new SignInRequest("admin@admin.ru", "admin");
+        var request = new SignInRequest("admin@mail.ru", "admin");
 
         var response = testRestTemplate
                 .postForEntity("/api/v1/auth/login", request, JwtAuthenticationResponse.class);
