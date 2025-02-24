@@ -17,7 +17,7 @@ public class CommentMapper {
                 comment.getTask().getId(),
                 comment.getUser().getId(),
                 comment.getUser().getEmail(),
-                comment.getCreatedAt().toString()
+                comment.getCreatedAt()
         );
     }
 
