@@ -88,5 +88,5 @@
    cd manager-task
 2. ```bash
    docker compose up -d   
-3. Для доступа к документации [API](http://localhost:8080/swagger-ui/index.html)
+3. Для доступа к документации если локально [localhost](http://localhost:8080/swagger-ui/index.html)
 

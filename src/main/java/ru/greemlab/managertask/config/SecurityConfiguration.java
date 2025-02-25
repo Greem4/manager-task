@@ -45,7 +45,7 @@ public class SecurityConfiguration {
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable) // Отключаем CSRF
+        http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new CorsConfiguration();
                     corsConfiguration.setAllowedOriginPatterns(List.of("*"));
@@ -55,13 +55,18 @@ public class SecurityConfiguration {
                     return corsConfiguration;
                 }))
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/api/v1/auth/**").permitAll() // Доступ к аутентификации открыт для всех
-                        .requestMatchers("/swagger-ui/**", "/swagger-resources/*", "/v3/api-docs/**").permitAll() // Доступ к Swagger UI
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN") // Доступ к админским функциям только для администраторов
-                        .anyRequest().authenticated()) // Все остальные запросы требуют аутентификации
-                .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS)) // Отключаем сессии
-                .authenticationProvider(authenticationProvider()) // Добавляем провайдер аутентификации
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Добавляем фильтр перед фильтром аутентификации
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-resources/*",
+                                "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/").permitAll()
+                        .requestMatchers(
+                                "/api/v1/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
+                .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
