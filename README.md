@@ -82,6 +82,7 @@
    ```bash
    git clone https://github.com/Greem4/manager-task.git
    cd manager-task
-   docker-compose up --build
-2. Для доступа к документации [API](http://localhost:8080/swagger-ui/index.html)
+2. ```bash
+   docker compose up -d   
+3. Для доступа к документации [API](http://localhost:8080/swagger-ui/index.html)
 
